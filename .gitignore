@@ -1,0 +1,9 @@
+# Never commit personal data backups exported from the app
+lifelog-backup-*.json
+*.backup.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/

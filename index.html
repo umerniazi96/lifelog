@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeLog · Personal Health & Life Tracker</title>
+<style>
+  :root{
+    --bg:#0f1115; --bg-2:#161922; --bg-3:#1d212c; --line:#272c38;
+    --txt:#e7eaf0; --txt-dim:#9aa3b2; --txt-faint:#6b7383;
+    --accent:#5b8cff; --accent-2:#7c5bff; --good:#3ecf8e; --warn:#ffb454; --bad:#ff5d5d;
+    --radius:14px; --shadow:0 6px 24px rgba(0,0,0,.35);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#2c3340;border-radius:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  .app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+  /* Sidebar */
+  .side{background:var(--bg-2);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 14px;gap:6px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#fff}
+  .brand h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px}
+  .brand small{display:block;color:var(--txt-faint);font-size:11px;font-weight:500}
+  .nav{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+  .nav button{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:var(--txt-dim);
+    padding:10px 12px;border-radius:10px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:.12s}
+  .nav button:hover{background:var(--bg-3);color:var(--txt)}
+  .nav button.active{background:linear-gradient(135deg,rgba(91,140,255,.18),rgba(124,91,255,.14));color:#fff}
+  .nav button .ic{width:18px;text-align:center;font-size:15px}
+  .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:1px solid var(--line)}
+  .side-foot button{font-size:12.5px;color:var(--txt-dim);background:var(--bg-3);border:1px solid var(--line);
+    padding:8px 10px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:center}
+  .side-foot button:hover{color:#fff;border-color:#3a4250}
+  .privacy{font-size:10.5px;color:var(--txt-faint);text-align:center;padding:8px 4px 0;line-height:1.45}
+
+  /* Main */
+  .main{padding:28px 34px 60px;max-width:1100px}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+  .page-head h2{margin:0;font-size:24px;font-weight:700}
+  .page-head p{margin:4px 0 0;color:var(--txt-dim);font-size:13.5px}
+  .today{color:var(--txt-faint);font-size:13px;text-align:right}
+
+  .grid{display:grid;gap:16px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .cols-4{grid-template-columns:repeat(4,1fr)}
+
+  .card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card h3{margin:0 0 16px;font-size:14px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--txt-dim);display:flex;align-items:center;gap:8px}
+  .card h3 .ic{font-size:15px}
+
+  .stat{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .stat .label{font-size:12px;color:var(--txt-dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .stat .val{font-size:28px;font-weight:800;margin-top:6px;line-height:1}
+  .stat .sub{font-size:12px;color:var(--txt-faint);margin-top:6px}
+  .stat .val.good{color:var(--good)} .stat .val.warn{color:var(--warn)} .stat .val.bad{color:var(--bad)}
+
+  /* Forms */
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  label{display:block;font-size:12.5px;color:var(--txt-dim);font-weight:600;margin-bottom:6px}
+  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+    padding:10px 12px;border-radius:10px;font:inherit;font-size:14px;transition:.12s;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,140,255,.15)}
+  textarea{resize:vertical;min-height:90px;line-height:1.6}
+  .row{display:grid;gap:12px}
+  .row.r2{grid-template-columns:1fr 1fr}
+  .row.r3{grid-template-columns:1fr 1fr 1fr}
+  .hint{font-size:11.5px;color:var(--txt-faint);margin-top:5px}
+
+  .btn{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:0;padding:10px 18px;
+    border-radius:10px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:.12s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:var(--bg-3);border:1px solid var(--line);color:var(--txt)}
+  .btn.ghost:hover{border-color:#3a4250}
+  .btn.danger{background:rgba(255,93,93,.14);color:var(--bad);border:1px solid rgba(255,93,93,.3)}
+  .btn.sm{padding:7px 13px;font-size:13px}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+  .saved-flash{color:var(--good);font-size:13px;font-weight:600;opacity:0;transition:.3s;display:inline-flex;align-items:center;gap:6px}
+  .saved-flash.show{opacity:1}
+
+  /* Lists */
+  .list{display:flex;flex-direction:column;gap:12px}
+  .item{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .item .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+  .item .top .when{font-size:12px;color:var(--txt-faint);font-weight:600}
+  .item .top .ttl{font-weight:700;font-size:15px}
+  .item .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--txt-dim);margin:6px 0}
+  .item .meta b{color:var(--txt)}
+  .item .body{font-size:13.5px;color:var(--txt);white-space:pre-wrap;margin-top:6px}
+  .item .del{background:none;border:0;color:var(--txt-faint);cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px}
+  .item .del:hover{color:var(--bad);background:rgba(255,93,93,.1)}
+  .empty{color:var(--txt-faint);font-size:13.5px;text-align:center;padding:30px;border:1px dashed var(--line);border-radius:12px}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--bg-3);color:var(--txt-dim)}
+  .pill.cardio{background:rgba(91,140,255,.16);color:#8fb0ff}
+  .pill.strength{background:rgba(124,91,255,.16);color:#b29bff}
+  .pill.flex{background:rgba(62,207,142,.16);color:#6fe0b0}
+  .pill.sport{background:rgba(255,180,84,.16);color:#ffca80}
+  .pill.walk{background:rgba(154,163,178,.16);color:#bcc4d2}
+
+  .mood-row{display:flex;gap:8px;flex-wrap:wrap}
+  .mood-row .m{flex:1;min-width:60px;text-align:center;padding:10px 4px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--bg);transition:.12s}
+  .mood-row .m .emo{font-size:22px;display:block}
+  .mood-row .m .lbl{font-size:10.5px;color:var(--txt-dim);margin-top:3px}
+  .mood-row .m.sel{border-color:var(--accent);background:rgba(91,140,255,.12)}
+
+  .scale{display:flex;gap:6px}
+  .scale .s{flex:1;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt-dim);cursor:pointer;font-weight:700}
+  .scale .s.sel{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-color:transparent}
+
+  .tag{display:inline-block;font-size:11px;background:var(--bg-3);border:1px solid var(--line);padding:2px 8px;border-radius:6px;margin:2px 4px 2px 0;color:var(--txt-dim)}
+
+  .view{display:none;animation:fade .2s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-3);
+    border:1px solid var(--line);padding:12px 20px;border-radius:12px;box-shadow:var(--shadow);opacity:0;
+    transition:.25s;pointer-events:none;font-size:14px;font-weight:600;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* Print card */
+  #print-card{display:none}
+  @media print{
+    @page{margin:14mm}
+    body{background:#fff}
+    .app,.toast{display:none!important}
+    #print-card{display:block;color:#111;font-family:var(--font);max-width:760px;margin:0 auto}
+    #print-card .pc-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #c0392b;padding-bottom:10px;margin-bottom:4px}
+    #print-card .pc-head h1{margin:0;font-size:26px;color:#c0392b;letter-spacing:.5px}
+    #print-card .pc-head .who{text-align:right}
+    #print-card .pc-head .who .nm{font-size:20px;font-weight:800}
+    #print-card .pc-head .who .dt{font-size:11px;color:#777}
+    #print-card section{margin-top:16px;break-inside:avoid}
+    #print-card h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#c0392b;margin:0 0 7px;border-bottom:1px solid #ddd;padding-bottom:3px}
+    #print-card .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    #print-card .kv .k{font-size:10px;text-transform:uppercase;color:#888;letter-spacing:.5px}
+    #print-card .kv .v{font-size:15px;font-weight:700}
+    #print-card .block{font-size:14px;white-space:pre-wrap;line-height:1.55}
+    #print-card .alert{background:#fdecea;border:1px solid #f5b7b1;border-radius:6px;padding:8px 12px;font-size:14px;color:#922}
+    #print-card .alert b{color:#c0392b}
+    #print-card .ec{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:14px}
+    #print-card .ec .box{border:1px solid #ddd;border-radius:6px;padding:8px 12px}
+    #print-card .foot{margin-top:22px;font-size:10px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:8px}
+    #print-card .none{color:#aaa;font-style:italic;font-size:13px}
+  }
+  @media(max-width:820px){
+    .app{grid-template-columns:1fr}
+    .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}
+    .nav{flex-direction:row;flex-wrap:wrap;flex:1}
+    .side-foot{flex-direction:row;border:0;padding:0;margin-left:auto}
+    .privacy{display:none}
+    .main{padding:20px}
+    .cols-2,.cols-3,.cols-4,.row.r2,.row.r3{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">L</div>
+      <div><h1>LifeLog</h1><small>your private health log</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="dashboard" class="active"><span class="ic">▦</span> Dashboard</button>
+      <button data-view="report"><span class="ic">✎</span> Daily Report</button>
+      <button data-view="exercise"><span class="ic">🏃</span> Exercise</button>
+      <button data-view="medical"><span class="ic">✚</span> Medical</button>
+      <button data-view="physical"><span class="ic">📏</span> Physical</button>
+      <button data-view="job"><span class="ic">💼</span> Job</button>
+      <button data-view="history"><span class="ic">🗂</span> History</button>
+    </nav>
+    <div class="side-foot">
+      <button id="btnExport"><span>⭳</span> Export backup</button>
+      <button id="btnImport"><span>⭱</span> Import backup</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+    <div class="privacy">🔒 Everything is stored only in this browser on this device. Nothing is sent anywhere.<br><br>Personal tracker — not medical advice. Always verify with a healthcare professional.</div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="page-head">
+        <div><h2 id="greeting">Welcome back</h2><p>Here's your snapshot for today.</p></div>
+        <div class="today" id="todayStr"></div>
+      </div>
+      <div class="grid cols-4" style="margin-bottom:16px">
+        <div class="stat"><div class="label">Reports logged</div><div class="val" id="s-reports">0</div><div class="sub" id="s-streak">Start your streak</div></div>
+        <div class="stat"><div class="label">Workouts (7d)</div><div class="val good" id="s-workouts">0</div><div class="sub" id="s-mins">0 min total</div></div>
+        <div class="stat"><div class="label">Current weight</div><div class="val" id="s-weight">—</div><div class="sub" id="s-bmi">BMI —</div></div>
+        <div class="stat"><div class="label">Avg energy (7d)</div><div class="val" id="s-energy">—</div><div class="sub">out of 5</div></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3><span class="ic">✎</span> Recent reports</h3>
+          <div class="list" id="dash-reports"></div>
+        </div>
+        <div class="card">
+          <h3><span class="ic">🏃</span> Recent workouts</h3>
+          <div class="list" id="dash-workouts"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3><span class="ic">⚡</span> Quick log</h3>
+        <p style="margin:-8px 0 14px;color:var(--txt-dim);font-size:13px">Jump straight in:</p>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn" onclick="go('report')">＋ Write today's report</button>
+          <button class="btn ghost" onclick="go('exercise')">＋ Log a workout</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DAILY REPORT -->
+    <section class="view" id="view-report">
+      <div class="page-head"><div><h2>Daily Report</h2><p>How was today? Capture how you feel, then write it down.</p></div></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3><span class="ic">✎</span> New entry</h3>
+          <div class="field"><label>Date</label><input type="date" id="r-date"></div>
+          <div class="field">
+            <label>Overall mood</label>
+            <div class="mood-row" id="r-mood">
+              <div class="m" data-v="1"><span class="emo">😞</span><span class="lbl">Rough</span></div>
+              <div class="m" data-v="2"><span class="emo">🙁</span><span class="lbl">Low</span></div>
+              <div class="m" data-v="3"><span class="emo">😐</span><span class="lbl">Okay</span></div>
+              <div class="m" data-v="4"><span class="emo">🙂</span><span class="lbl">Good</span></div>
+              <div class="m" data-v="5"><span class="emo">😄</span><span class="lbl">Great</span></div>
+            </div>
+          </div>
+          <div class="row r2">
+            <div class="field"><label>Energy (1–5)</label><div class="scale" id="r-energy"></div></div>
+            <div class="field"><label>Pain / discomfort (0–5)</label><div class="scale" id="r-pain" data-zero="1"></div></div>
+          </div>
+          <div class="row r3">
+            <div class="field"><label>Sleep (hrs)</label><input type="number" id="r-sleep" step="0.5" min="0" max="24" placeholder="7.5"></div>
+            <div class="field"><label>Weight (kg)</label><input type="number" id="r-weight" step="0.1" placeholder="optional"></div>
+            <div class="field"><label>Water (glasses)</label><input type="number" id="r-water" step="1" min="0" placeholder="8"></div>
+          </div>
+          <div class="field"><label>Today's report</label>
+            <textarea id="r-text" placeholder="What happened today? How did your body feel? Work, mood, wins, struggles, anything worth remembering…"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="r-save">Save report</button>
+            <span class="saved-flash" id="r-flash">✓ Saved</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span class="ic">📖</span> Past reports</h3>
+          <div class="list" id="report-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXERCISE -->
+    <section class="view" id="view-exercise">
+      <div class="page-head"><div><h2>Exercise</h2><p>Log workouts and watch your weekly volume add up.</p></div></div>
+      <div class="grid cols-4" style="margin-bottom:16px">
+        <div class="stat"><div class="label">This week</div><div class="val good" id="e-week">0</div><div class="sub">workouts</div></div>
+        <div class="stat"><div class="label">Minutes (7d)</div><div class="val" id="e-mins">0</div><div class="sub">active time</div></div>
+        <div class="stat"><div class="label">Total logged</div><div class="val" id="e-total">0</div><div class="sub">all time</div></div>
+        <div class="stat"><div class="label">Most frequent</div><div class="val" id="e-fav" style="font-size:20px">—</div><div class="sub">workout type</div></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3><span class="ic">＋</span> Log workout</h3>
+          <div class="row r2">
+            <div class="field"><label>Date</label><input type="date" id="e-date"></div>
+            <div class="field"><label>Type</label>
+              <select id="e-type">
+                <option value="cardio">Cardio</option><option value="strength">Strength</option>
+                <option value="flex">Flexibility / Mobility</option><option value="sport">Sport</option>
+                <option value="walk">Walk / Steps</option><option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Activity</label><input id="e-name" placeholder="e.g. Push day, 5k run, Yoga…"></div>
+          <div class="row r3">
+            <div class="field"><label>Duration (min)</label><input type="number" id="e-dur" min="0" placeholder="45"></div>
+            <div class="field"><label>Intensity</label><select id="e-int"><option>Light</option><option>Moderate</option><option>Hard</option><option>Max</option></select></div>
+            <div class="field"><label>Calories</label><input type="number" id="e-cal" min="0" placeholder="optional"></div>
+          </div>
+          <div class="field"><label>Notes</label><textarea id="e-notes" style="min-height:60px" placeholder="Sets, reps, distance, how it felt…"></textarea></div>
+          <div class="btn-row"><button class="btn" id="e-save">Add workout</button><span class="saved-flash" id="e-flash">✓ Added</span></div>
+        </div>
+        <div class="card">
+          <h3><span class="ic">📋</span> Workout log</h3>
+          <div class="list" id="exercise-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEDICAL -->
+    <section class="view" id="view-medical">
+      <div class="page-head">
+        <div><h2>Medical</h2><p>Your key health facts, in one place for when you need them.</p></div>
+        <button class="btn" onclick="printCard()">🖨 Print / Save as PDF card</button>
+      </div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3><span class="ic">✚</span> Health profile</h3>
+          <div class="field"><label>Full name</label><input id="m-name" placeholder="Your full name"></div>
+          <div class="row r2">
+            <div class="field"><label>Blood type</label><input id="m-blood" placeholder="O+"></div>
+            <div class="field"><label>Primary physician</label><input id="m-doc" placeholder="Dr. Name"></div>
+          </div>
+          <div class="field"><label>Allergies</label><textarea id="m-allergy" style="min-height:60px" placeholder="Penicillin, peanuts…"></textarea></div>
+          <div class="field"><label>Chronic conditions</label><textarea id="m-cond" style="min-height:60px" placeholder="Asthma, hypertension…"></textarea></div>
+          <div class="field"><label>Current medications</label><textarea id="m-meds" placeholder="One per line — e.g. Metformin 500mg, twice daily"></textarea></div>
+          <div class="field"><label>Notes</label><textarea id="m-notes" style="min-height:60px" placeholder="Surgeries, immunizations, family history…"></textarea></div>
+        </div>
+        <div class="card">
+          <h3><span class="ic">🚑</span> Emergency & insurance</h3>
+          <div class="field"><label>Emergency contact name</label><input id="m-ecname" placeholder="Full name"></div>
+          <div class="row r2">
+            <div class="field"><label>Relationship</label><input id="m-ecrel" placeholder="Spouse, parent…"></div>
+            <div class="field"><label>Phone</label><input id="m-ecphone" placeholder="+1 …"></div>
+          </div>
+          <div class="field"><label>Insurance provider</label><input id="m-insprov" placeholder="Provider name"></div>
+          <div class="field"><label>Policy / member number</label><input id="m-inspol" placeholder="Policy #"></div>
+          <div class="field"><label>Preferred hospital / clinic</label><input id="m-hosp" placeholder="Name & location"></div>
+          <div class="btn-row"><button class="btn" id="m-save">Save medical</button><span class="saved-flash" id="m-flash">✓ Saved</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHYSICAL -->
+    <section class="view" id="view-physical">
+      <div class="page-head"><div><h2>Physical</h2><p>Your body's baseline numbers and goals.</p></div></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3><span class="ic">📏</span> Measurements</h3>
+          <div class="row r2">
+            <div class="field"><label>Date of birth</label><input type="date" id="p-dob"></div>
+            <div class="field"><label>Sex</label><select id="p-sex"><option value="">—</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+          </div>
+          <div class="row r2">
+            <div class="field"><label>Height (cm)</label><input type="number" id="p-height" placeholder="175"></div>
+            <div class="field"><label>Current weight (kg)</label><input type="number" id="p-weight" step="0.1" placeholder="72"></div>
+          </div>
+          <div class="row r2">
+            <div class="field"><label>Target weight (kg)</label><input type="number" id="p-target" step="0.1" placeholder="68"></div>
+            <div class="field"><label>Body fat (%)</label><input type="number" id="p-bf" step="0.1" placeholder="optional"></div>
+          </div>
+          <div class="btn-row"><button class="btn" id="p-save">Save physical</button><span class="saved-flash" id="p-flash">✓ Saved</span></div>
+        </div>
+        <div class="card">
+          <h3><span class="ic">❤</span> Vitals & derived</h3>
+          <div class="row r2">
+            <div class="field"><label>Resting heart rate</label><input type="number" id="p-rhr" placeholder="bpm"></div>
+            <div class="field"><label>Blood pressure</label><input id="p-bp" placeholder="120/80"></div>
+          </div>
+          <div class="grid cols-2" style="margin-top:6px">
+            <div class="stat"><div class="label">Age</div><div class="val" id="p-age">—</div></div>
+            <div class="stat"><div class="label">BMI</div><div class="val" id="p-bmi">—</div><div class="sub" id="p-bmicat"></div></div>
+          </div>
+          <div class="stat" style="margin-top:12px"><div class="label">To goal</div><div class="val" id="p-togoal">—</div><div class="sub">from current to target weight</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- JOB -->
+    <section class="view" id="view-job">
+      <div class="page-head"><div><h2>Job</h2><p>Work context — useful when you look back at how you felt.</p></div></div>
+      <div class="card" style="max-width:640px">
+        <h3><span class="ic">💼</span> Work details</h3>
+        <div class="row r2">
+          <div class="field"><label>Job title</label><input id="j-title" placeholder="Software Engineer"></div>
+          <div class="field"><label>Employer</label><input id="j-emp" placeholder="Company"></div>
+        </div>
+        <div class="row r2">
+          <div class="field"><label>Work schedule</label><select id="j-sched"><option value="">—</option><option>Full-time</option><option>Part-time</option><option>Shift work</option><option>Remote</option><option>Hybrid</option><option>Self-employed</option></select></div>
+          <div class="field"><label>Typical hours / week</label><input type="number" id="j-hours" placeholder="40"></div>
+        </div>
+        <div class="field"><label>Typical stress level</label><div class="scale" id="j-stress"></div><div class="hint">1 = very calm · 5 = very high pressure</div></div>
+        <div class="field"><label>Notes</label><textarea id="j-notes" placeholder="Commute, shift pattern, deadlines, anything affecting your health or routine…"></textarea></div>
+        <div class="btn-row"><button class="btn" id="j-save">Save job</button><span class="saved-flash" id="j-flash">✓ Saved</span></div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view" id="view-history">
+      <div class="page-head"><div><h2>History</h2><p>Everything you've logged, newest first.</p></div></div>
+      <div class="card">
+        <h3><span class="ic">🗂</span> All entries</h3>
+        <div class="list" id="history-list"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3><span class="ic">⚙</span> Data</h3>
+        <p style="margin:-8px 0 14px;color:var(--txt-dim);font-size:13px">Back up regularly — your data lives only in this browser. Clearing browser data will erase it unless you've exported.</p>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn ghost" onclick="exportData()">⭳ Export backup (.json)</button>
+          <button class="btn ghost" onclick="document.getElementById('importFile').click()">⭱ Import backup</button>
+          <button class="btn danger" onclick="wipe()">Delete all data</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<div id="print-card"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const KEY = "lifelog.v1";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+let db = load();
+function load(){
+  try{ return JSON.parse(localStorage.getItem(KEY)) || blank(); }
+  catch(e){ return blank(); }
+}
+function blank(){ return { profile:{medical:{},physical:{},job:{}}, exercises:[], reports:[] }; }
+function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+
+/* ---------- Navigation ---------- */
+function go(v){
+  $$('#nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  $$('.view').forEach(s=>s.classList.toggle('active', s.id==='view-'+v));
+  window.scrollTo(0,0);
+  if(v==='dashboard') renderDash();
+  if(v==='report') renderReports();
+  if(v==='exercise') renderExercise();
+  if(v==='history') renderHistory();
+}
+$('#nav').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) go(b.dataset.view); });
+
+/* ---------- Toast / flash ---------- */
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+function flash(id){ const f=$(id); f.classList.add('show'); setTimeout(()=>f.classList.remove('show'),1600); }
+
+/* ---------- Scale builders ---------- */
+function buildScale(el){
+  const zero = el.dataset.zero==='1';
+  el.innerHTML='';
+  for(let i=zero?0:1;i<=5;i++){
+    const b=document.createElement('div'); b.className='s'; b.textContent=i; b.dataset.v=i;
+    b.onclick=()=>{ [...el.children].forEach(c=>c.classList.remove('sel')); b.classList.add('sel'); el.dataset.val=i; };
+    el.appendChild(b);
+  }
+}
+function setScale(el,v){ [...el.children].forEach(c=>c.classList.toggle('sel', +c.dataset.v===+v)); el.dataset.val=v??''; }
+['#r-energy','#r-pain','#j-stress'].forEach(s=>buildScale($(s)));
+
+/* ---------- Helpers ---------- */
+const TYPE = {cardio:'Cardio',strength:'Strength',flex:'Mobility',sport:'Sport',walk:'Walk',other:'Other'};
+const PILL = {cardio:'cardio',strength:'strength',flex:'flex',sport:'sport',walk:'walk',other:''};
+const MOOD = {1:'😞',2:'🙁',3:'😐',4:'🙂',5:'😄'};
+function fmtDate(iso){ const d=new Date(iso+'T00:00'); return isNaN(d)?iso:d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
+function daysAgo(iso){ const d=Math.floor((new Date(todayISO())-new Date(iso))/864e5); return d===0?'Today':d===1?'Yesterday':d+' days ago'; }
+function within(iso,days){ return (new Date(todayISO())-new Date(iso))/864e5 < days; }
+function esc(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---------- DASHBOARD ---------- */
+function renderDash(){
+  $('#greeting').textContent = 'Welcome back';
+  $('#todayStr').textContent = new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  $('#s-reports').textContent = db.reports.length;
+  $('#s-streak').textContent = streak() ? streak()+' day streak 🔥' : 'Start your streak';
+  const w7 = db.exercises.filter(e=>within(e.date,7));
+  $('#s-workouts').textContent = w7.length;
+  $('#s-mins').textContent = w7.reduce((a,e)=>a+(+e.dur||0),0)+' min total';
+  const w = db.profile.physical.weight;
+  $('#s-weight').textContent = w ? w+' kg' : '—';
+  $('#s-bmi').textContent = bmi() ? 'BMI '+bmi() : 'BMI —';
+  const en = db.reports.filter(r=>within(r.date,7)&&r.energy).map(r=>+r.energy);
+  $('#s-energy').textContent = en.length ? (en.reduce((a,b)=>a+b,0)/en.length).toFixed(1) : '—';
+
+  const dr = [...db.reports].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4);
+  $('#dash-reports').innerHTML = dr.length ? dr.map(r=>`
+    <div class="item"><div class="top"><span class="ttl">${MOOD[r.mood]||'📝'} ${fmtDate(r.date)}</span><span class="when">${daysAgo(r.date)}</span></div>
+    <div class="body">${esc(r.text).slice(0,140)||'<i style=color:#6b7383>No notes</i>'}${(r.text||'').length>140?'…':''}</div></div>`).join('')
+    : `<div class="empty">No reports yet. <a href="#" onclick="go('report');return false">Write your first →</a></div>`;
+
+  const dw = [...db.exercises].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4);
+  $('#dash-workouts').innerHTML = dw.length ? dw.map(e=>`
+    <div class="item"><div class="top"><span class="ttl">${esc(e.name)||TYPE[e.type]}</span><span class="when">${daysAgo(e.date)}</span></div>
+    <div class="meta"><span class="pill ${PILL[e.type]}">${TYPE[e.type]}</span> ${e.dur?`<span><b>${e.dur}</b> min</span>`:''} ${e.int?`<span>${e.int}</span>`:''}</div></div>`).join('')
+    : `<div class="empty">No workouts yet. <a href="#" onclick="go('exercise');return false">Log one →</a></div>`;
+}
+function streak(){
+  if(!db.reports.length) return 0;
+  const set=new Set(db.reports.map(r=>r.date));
+  let n=0, d=new Date(todayISO());
+  if(!set.has(d.toISOString().slice(0,10))) d.setDate(d.getDate()-1);
+  while(set.has(d.toISOString().slice(0,10))){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+
+/* ---------- REPORTS ---------- */
+function initReportForm(){
+  $('#r-date').value = todayISO();
+  $('#r-mood').dataset.val=''; $$('#r-mood .m').forEach(m=>m.classList.remove('sel'));
+  setScale($('#r-energy'),''); setScale($('#r-pain'),'');
+  ['#r-sleep','#r-weight','#r-water','#r-text'].forEach(s=>$(s).value='');
+}
+$('#r-mood').addEventListener('click',e=>{ const m=e.target.closest('.m'); if(!m)return;
+  $$('#r-mood .m').forEach(x=>x.classList.remove('sel')); m.classList.add('sel'); $('#r-mood').dataset.val=m.dataset.v; });
+$('#r-save').onclick=()=>{
+  const text=$('#r-text').value.trim(), mood=$('#r-mood').dataset.val;
+  if(!text && !mood){ toast('Add a mood or a note first'); return; }
+  const rec={ id:uid(), date:$('#r-date').value||todayISO(), mood, energy:$('#r-energy').dataset.val||'',
+    pain:$('#r-pain').dataset.val||'', sleep:$('#r-sleep').value, weight:$('#r-weight').value,
+    water:$('#r-water').value, text };
+  db.reports.push(rec);
+  if(rec.weight){ db.profile.physical.weight=rec.weight; bindPhysical(); }
+  save(); flash('#r-flash'); toast('Report saved'); initReportForm(); renderReports();
+};
+function renderReports(){
+  const list=[...db.reports].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#report-list').innerHTML = list.length ? list.map(r=>`
+    <div class="item"><div class="top"><span class="ttl">${MOOD[r.mood]||'📝'} ${fmtDate(r.date)}</span>
+      <button class="del" onclick="delReport('${r.id}')" title="Delete">✕</button></div>
+      <div class="meta">
+        ${r.energy?`<span>⚡ Energy <b>${r.energy}</b>/5</span>`:''}
+        ${r.pain?`<span>🩹 Pain <b>${r.pain}</b>/5</span>`:''}
+        ${r.sleep?`<span>😴 <b>${r.sleep}</b>h</span>`:''}
+        ${r.water?`<span>💧 <b>${r.water}</b></span>`:''}
+        ${r.weight?`<span>⚖ <b>${r.weight}</b>kg</span>`:''}
+      </div>
+      ${r.text?`<div class="body">${esc(r.text)}</div>`:''}</div>`).join('')
+    : `<div class="empty">No reports yet.</div>`;
+}
+function delReport(id){ if(!confirm('Delete this report?'))return; db.reports=db.reports.filter(r=>r.id!==id); save(); renderReports(); }
+
+/* ---------- EXERCISE ---------- */
+function initExerciseForm(){ $('#e-date').value=todayISO(); ['#e-name','#e-dur','#e-cal','#e-notes'].forEach(s=>$(s).value=''); }
+$('#e-save').onclick=()=>{
+  const name=$('#e-name').value.trim();
+  if(!name){ toast('Name the activity first'); return; }
+  db.exercises.push({ id:uid(), date:$('#e-date').value||todayISO(), type:$('#e-type').value, name,
+    dur:$('#e-dur').value, int:$('#e-int').value, cal:$('#e-cal').value, notes:$('#e-notes').value.trim() });
+  save(); flash('#e-flash'); toast('Workout added'); initExerciseForm(); renderExercise();
+};
+function renderExercise(){
+  const w7=db.exercises.filter(e=>within(e.date,7));
+  $('#e-week').textContent=w7.length;
+  $('#e-mins').textContent=w7.reduce((a,e)=>a+(+e.dur||0),0);
+  $('#e-total').textContent=db.exercises.length;
+  const counts={}; db.exercises.forEach(e=>counts[e.type]=(counts[e.type]||0)+1);
+  const fav=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  $('#e-fav').textContent=fav?TYPE[fav[0]]:'—';
+  const list=[...db.exercises].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#exercise-list').innerHTML=list.length? list.map(e=>`
+    <div class="item"><div class="top"><span class="ttl">${esc(e.name)}</span>
+      <button class="del" onclick="delEx('${e.id}')" title="Delete">✕</button></div>
+      <div class="meta"><span class="pill ${PILL[e.type]}">${TYPE[e.type]}</span>
+        <span class="when">${fmtDate(e.date)}</span>
+        ${e.dur?`<span><b>${e.dur}</b> min</span>`:''}${e.int?`<span>${e.int}</span>`:''}${e.cal?`<span><b>${e.cal}</b> kcal</span>`:''}</div>
+      ${e.notes?`<div class="body">${esc(e.notes)}</div>`:''}</div>`).join('')
+    : `<div class="empty">No workouts logged yet.</div>`;
+}
+function delEx(id){ if(!confirm('Delete this workout?'))return; db.exercises=db.exercises.filter(e=>e.id!==id); save(); renderExercise(); }
+
+/* ---------- MEDICAL ---------- */
+const MED=['name','blood','doc','allergy','cond','meds','notes','ecname','ecrel','ecphone','insprov','inspol','hosp'];
+function bindMedical(){ MED.forEach(k=>$('#m-'+k).value=db.profile.medical[k]||''); }
+$('#m-save').onclick=()=>{ MED.forEach(k=>db.profile.medical[k]=$('#m-'+k).value); save(); flash('#m-flash'); toast('Medical saved'); };
+
+/* ---------- PHYSICAL ---------- */
+const PHY=['dob','sex','height','weight','target','bf','rhr','bp'];
+function bindPhysical(){ PHY.forEach(k=>$('#p-'+k).value=db.profile.physical[k]||''); recalcPhysical(); }
+function bmi(){ const h=+db.profile.physical.height, w=+db.profile.physical.weight; if(!h||!w)return null; return (w/((h/100)**2)).toFixed(1); }
+function recalcPhysical(){
+  const p=db.profile.physical;
+  let age='—'; if(p.dob){ const d=new Date(p.dob); age=Math.floor((Date.now()-d)/(365.25*864e5)); }
+  $('#p-age').textContent=age;
+  const b=bmi(); $('#p-bmi').textContent=b||'—';
+  let cat=''; if(b){ const n=+b; cat=n<18.5?'Underweight':n<25?'Healthy':n<30?'Overweight':'Obese'; }
+  $('#p-bmicat').textContent=cat;
+  $('#p-bmi').className='val '+(b?(+b>=18.5&&+b<25?'good':(+b<18.5||+b<30?'warn':'bad')):'');
+  const w=+p.weight, t=+p.target;
+  $('#p-togoal').textContent=(w&&t)?((w-t>0?'-':'+')+Math.abs(w-t).toFixed(1)+' kg'):'—';
+}
+$('#p-save').onclick=()=>{ PHY.forEach(k=>db.profile.physical[k]=$('#p-'+k).value); save(); recalcPhysical(); flash('#p-flash'); toast('Physical saved'); };
+PHY.forEach(k=>{ const el=$('#p-'+k); el.addEventListener('input',()=>{ PHY.forEach(x=>db.profile.physical[x]=$('#p-'+x).value); recalcPhysical(); }); });
+
+/* ---------- JOB ---------- */
+const JOB=['title','emp','sched','hours','notes'];
+function bindJob(){ JOB.forEach(k=>$('#j-'+k).value=db.profile.job[k]||''); setScale($('#j-stress'),db.profile.job.stress||''); }
+$('#j-stress').addEventListener('click',()=>{}); // built by buildScale
+$('#j-save').onclick=()=>{ JOB.forEach(k=>db.profile.job[k]=$('#j-'+k).value); db.profile.job.stress=$('#j-stress').dataset.val||''; save(); flash('#j-flash'); toast('Job saved'); };
+
+/* ---------- HISTORY ---------- */
+function renderHistory(){
+  const items=[
+    ...db.reports.map(r=>({date:r.date,kind:'report',obj:r})),
+    ...db.exercises.map(e=>({date:e.date,kind:'exercise',obj:e}))
+  ].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#history-list').innerHTML=items.length? items.map(it=>{
+    if(it.kind==='report'){ const r=it.obj; return `<div class="item"><div class="top">
+      <span class="ttl">${MOOD[r.mood]||'📝'} Daily report · ${fmtDate(r.date)}</span><span class="when">${daysAgo(r.date)}</span></div>
+      ${r.text?`<div class="body">${esc(r.text).slice(0,200)}${r.text.length>200?'…':''}</div>`:''}</div>`; }
+    const e=it.obj; return `<div class="item"><div class="top">
+      <span class="ttl">🏃 ${esc(e.name)}</span><span class="when">${daysAgo(e.date)}</span></div>
+      <div class="meta"><span class="pill ${PILL[e.type]}">${TYPE[e.type]}</span>${e.dur?`<span><b>${e.dur}</b> min</span>`:''}</div></div>`;
+  }).join('') : `<div class="empty">Nothing logged yet.</div>`;
+}
+
+/* ---------- Print medical card ---------- */
+function printCard(){
+  const m=db.profile.medical, p=db.profile.physical;
+  const v=x=>x&&String(x).trim()?esc(x):'<span class="none">—</span>';
+  let age=''; if(p.dob){ age=Math.floor((Date.now()-new Date(p.dob))/(365.25*864e5))+' yrs'; }
+  const b=bmi();
+  $('#print-card').innerHTML=`
+    <div class="pc-head">
+      <h1>✚ MEDICAL CARD</h1>
+      <div class="who"><div class="nm">${v(m.name)}</div><div class="dt">Generated ${new Date().toLocaleDateString()}</div></div>
+    </div>
+    <section><h2>Vital details</h2><div class="kv">
+      <div><div class="k">Blood type</div><div class="v">${v(m.blood)}</div></div>
+      <div><div class="k">Age</div><div class="v">${age||'—'}</div></div>
+      <div><div class="k">Sex</div><div class="v">${v(p.sex)}</div></div>
+      <div><div class="k">Weight</div><div class="v">${p.weight?esc(p.weight)+' kg':'—'}</div></div>
+      <div><div class="k">Height</div><div class="v">${p.height?esc(p.height)+' cm':'—'}</div></div>
+      <div><div class="k">BMI</div><div class="v">${b||'—'}</div></div>
+      <div><div class="k">Blood pressure</div><div class="v">${v(p.bp)}</div></div>
+      <div><div class="k">Resting HR</div><div class="v">${p.rhr?esc(p.rhr)+' bpm':'—'}</div></div>
+    </div></section>
+    <section><h2>⚠ Allergies</h2><div class="alert"><b>${m.allergy&&m.allergy.trim()?esc(m.allergy):'No known allergies recorded'}</b></div></section>
+    <section><h2>Chronic conditions</h2><div class="block">${v(m.cond)}</div></section>
+    <section><h2>Current medications</h2><div class="block">${v(m.meds)}</div></section>
+    <section><h2>Emergency contact &amp; care</h2><div class="ec">
+      <div class="box"><div class="k" style="font-size:10px;color:#888">EMERGENCY CONTACT</div>
+        <b>${v(m.ecname)}</b>${m.ecrel?' ('+esc(m.ecrel)+')':''}<br>${v(m.ecphone)}</div>
+      <div class="box"><div class="k" style="font-size:10px;color:#888">PHYSICIAN</div><b>${v(m.doc)}</b></div>
+      <div class="box"><div class="k" style="font-size:10px;color:#888">PREFERRED HOSPITAL</div>${v(m.hosp)}</div>
+      <div class="box"><div class="k" style="font-size:10px;color:#888">INSURANCE</div>${v(m.insprov)}${m.inspol?' · '+esc(m.inspol):''}</div>
+    </div></section>
+    ${m.notes&&m.notes.trim()?`<section><h2>Notes</h2><div class="block">${esc(m.notes)}</div></section>`:''}
+    <div class="foot">Generated by LifeLog · stored locally on your device · verify details before clinical use</div>`;
+  window.print();
+}
+
+/* ---------- Export / Import / Wipe ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='lifelog-backup-'+todayISO()+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup downloaded');
+}
+$('#btnExport').onclick=exportData;
+$('#btnImport').onclick=()=>$('#importFile').click();
+$('#importFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result);
+    if(!d.profile||!Array.isArray(d.reports)) throw 0;
+    if(!confirm('Replace all current data with this backup?'))return;
+    db=d; save(); bindAll(); go('dashboard'); toast('Backup imported');
+  }catch(err){ toast('That file is not a valid LifeLog backup'); } };
+  rd.readAsText(f); e.target.value='';
+});
+function wipe(){
+  if(!confirm('Delete ALL data permanently? Export a backup first if unsure.'))return;
+  if(!confirm('Are you absolutely sure? This cannot be undone.'))return;
+  db=blank(); save(); bindAll(); go('dashboard'); toast('All data deleted');
+}
+
+/* ---------- Init ---------- */
+function bindAll(){ bindMedical(); bindPhysical(); bindJob(); initReportForm(); initExerciseForm(); }
+bindAll(); renderReports(); renderExercise(); renderDash();
+</script>
+</body>
+</html>
