@@ -1,4 +1,5 @@
 # Never commit personal data backups exported from the app
+livejournal-backup-*.json
 lifelog-backup-*.json
 *.backup.json
 

@@ -1,12 +1,12 @@
-# LifeLog — Personal Health & Life Tracker
+# Live Journal — Personal Health & Life Tracker
 
 A clean, private, single-file web app for tracking your **medical**, **physical**, **job**, and **exercise** details and writing **daily reports**. No accounts, no servers, no install — just open the file in your browser.
 
 ![Built as a single HTML file](https://img.shields.io/badge/build-single%20HTML%20file-5b8cff) ![No backend](https://img.shields.io/badge/backend-none-3ecf8e) ![License: MIT](https://img.shields.io/badge/license-MIT-7c5bff)
 
-**▶ Live demo: [umerniazi96.github.io/lifelog](https://umerniazi96.github.io/lifelog/)**
+**▶ Live demo:** _link added once deployed_
 
-![LifeLog dashboard](screenshot.png)
+![Live Journal dashboard](screenshot.png)
 
 *(Screenshot shows sample data — the app starts empty and stores everything locally in your browser.)*
 
@@ -24,7 +24,7 @@ A clean, private, single-file web app for tracking your **medical**, **physical*
 
 ## 🧭 How it works
 
-LifeLog is organised into simple sections you reach from the sidebar. Everything you type is saved instantly to your browser — there's no "sync" or sign-in step.
+Live Journal is organised into simple sections you reach from the sidebar. Everything you type is saved instantly to your browser — there's no "sync" or sign-in step.
 
 ### 1. Write a daily report
 Pick your mood, rate energy and pain on quick 1–5 scales, jot sleep / water / weight, and write a free-form note. Past entries build up in the timeline on the right, and consecutive days form a streak.
@@ -37,7 +37,7 @@ Record each session by type (cardio, strength, mobility, sport, walk…), with d
 ![Exercise screen](screenshots/exercise.png)
 
 ### 3. Keep your physical profile
-Enter height, weight, target and vitals once — LifeLog derives your **age, BMI (colour-coded), and distance to your goal weight** for you. Logging weight in a daily report updates this automatically.
+Enter height, weight, target and vitals once — Live Journal derives your **age, BMI (colour-coded), and distance to your goal weight** for you. Logging weight in a daily report updates this automatically.
 
 ![Physical screen](screenshots/physical.png)
 
