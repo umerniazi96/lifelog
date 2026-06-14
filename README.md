@@ -4,6 +4,12 @@ A clean, private, single-file web app for tracking your **medical**, **physical*
 
 ![Built as a single HTML file](https://img.shields.io/badge/build-single%20HTML%20file-5b8cff) ![No backend](https://img.shields.io/badge/backend-none-3ecf8e) ![License: MIT](https://img.shields.io/badge/license-MIT-7c5bff)
 
+**▶ Live demo: [umerniazi96.github.io/lifelog](https://umerniazi96.github.io/lifelog/)**
+
+![LifeLog dashboard](screenshot.png)
+
+*(Screenshot shows sample data — the app starts empty and stores everything locally in your browser.)*
+
 ## ✨ Features
 
 - **Dashboard** — at-a-glance stats: report streak, weekly workouts & active minutes, current weight + BMI, average energy.
